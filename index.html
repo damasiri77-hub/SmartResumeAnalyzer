@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Smart Resume Analyzer</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand-mark">SR</div>
+  <div><strong>Smart Resume Analyzer</strong><span>AI-assisted career feedback</span></div>
+  <span class="top-pill">STUDENT PROJECT</span>
+</header>
+<main class="container">
+  <section class="hero">
+    <div class="eyebrow">RESUME INTELLIGENCE • MADE SIMPLE</div>
+    <h1>Make your next application <span>stronger.</span></h1>
+    <p>Review key resume sections, compare skills with a target role, and get practical suggestions for improvement.</p>
+  </section>
+
+  <section class="panel upload-panel">
+    <div class="section-heading"><div><span class="step">01</span><h2>Analyze your resume</h2></div><span class="muted">PDF or DOCX · Max 5 MB</span></div>
+    <form method="post" enctype="multipart/form-data">
+      <label for="resume">Resume file</label>
+      <input id="resume" name="resume" type="file" accept=".pdf,.docx" required>
+      <label for="role">Target job role</label>
+      <select id="role" name="role">
+        {% for role in roles %}
+        <option value="{{ role }}" {% if role == selected_role %}selected{% endif %}>{{ role }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit">Analyze resume <span aria-hidden="true">→</span></button>
+    </form>
+    <p class="privacy-note">Prototype note: the file is processed for this request and is not saved to a database by this application.</p>
+    {% if error %}<div class="alert">{{ error }}</div>{% endif %}
+  </section>
+
+  {% if result %}
+  <section class="results">
+    <div class="section-heading"><div><span class="step">02</span><h2>Your analysis</h2></div><span class="muted">Target role: {{ result.role }}</span></div>
+    <div class="summary-grid">
+      <article class="score-card">
+        <span class="muted">Resume readiness score</span>
+        <div class="score">{{ result.score }}<small>/100</small></div>
+        <div class="progress"><span style="width: {{ result.score }}%"></span></div>
+        <p>Rule-based estimate for learning purposes, not an official ATS score.</p>
+      </article>
+      <article class="stat-card"><span class="muted">Words detected</span><strong>{{ result.word_count }}</strong><small>Extracted from your file</small></article>
+      <article class="stat-card"><span class="muted">Role keywords matched</span><strong>{{ result.matched|length }}<small>/{{ (result.matched|length) + (result.missing|length) }}</small></strong><small>Based on selected role</small></article>
+    </div>
+    <div class="two-col">
+      <article class="panel">
+        <h3>Resume section checklist</h3>
+        {% for name, present in result.sections.items() %}
+        <div class="check-row"><span>{{ name }}</span><span class="status {% if present %}good{% else %}missing{% endif %}">{% if present %}Found{% else %}Not detected{% endif %}</span></div>
+        {% endfor %}
+      </article>
+      <article class="panel">
+        <h3>Role keyword match</h3>
+        {% if result.matched %}
+        <div class="tag-list">{% for item in result.matched %}<span class="tag green">{{ item }}</span>{% endfor %}</div>
+        {% else %}<p class="muted">No target-role keywords were detected from this checklist.</p>{% endif %}
+        <h4>Keywords not detected</h4>
+        {% if result.missing %}<div class="tag-list">{% for item in result.missing %}<span class="tag">{{ item }}</span>{% endfor %}</div>{% else %}<p>All checklist keywords were detected.</p>{% endif %}
+      </article>
+    </div>
+    <article class="panel feedback">
+      <h3>Smart improvement suggestions</h3>
+      <ol>{% for suggestion in result.suggestions %}<li>{{ suggestion }}</li>{% endfor %}</ol>
+    </article>
+    <p class="disclaimer">Important: keyword matching is literal and can miss synonyms or context. Add only skills and experience that are true for you. This tool does not predict hiring outcomes.</p>
+    <button class="secondary" onclick="window.print()">Print / Save report as PDF</button>
+  </section>
+  {% endif %}
+  <footer>Smart Resume Analyzer · AI Capstone Prototype · Built with Python and Flask</footer>
+</main>
+</body>
+</html>
